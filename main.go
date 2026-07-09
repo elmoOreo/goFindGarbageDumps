@@ -732,7 +732,14 @@ func main() {
 			log.Printf("Error disconnecting from MongoDB: %v", err)
 		}
 	}()
+
+	// ─── STATIC ROUTING HANDLING EXTENSION ───
 	http.HandleFunc("/webhook", handleTelegramWebhook)
 	http.HandleFunc("/api/reports", handleReportsAPI)
+
+	// Mount the web directory onto the root path fallback router
+	fs := http.FileServer(http.Dir("web"))
+	http.Handle("/", fs)
+
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

@@ -1,0 +1,4 @@
+.git
+.gitignore
+main__*.go
+main_*.go
