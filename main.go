@@ -435,20 +435,26 @@ func handleReportsAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ==========================================
+	// CODE DIFFERENTIAL: ROBUST PIPELINE FILTER BYPASS
+	// ==========================================
+
 	filter := bson.M{
 		"state": bson.M{"$eq": state},
 		"city":  bson.M{"$eq": city},
 	}
 
-	if suburb != "" && suburb != "All" {
+	// Ensure literal "All" strings from frontend selectors clear the filter conditions completely
+	if suburb != "" && suburb != "All" && suburb != "all" {
 		filter["suburb"] = bson.M{"$eq": suburb}
 	}
-	if street != "" && street != "All" {
+	if street != "" && street != "All" && street != "all" {
 		filter["street"] = bson.M{"$eq": street}
 	}
-	if dumpType != "" && dumpType != "All" {
+	if dumpType != "" && dumpType != "All" && dumpType != "all" {
 		filter["dumpType"] = bson.M{"$eq": dumpType}
 	}
+
 	filter["city"] = bson.M{"$ne": "Unverified"}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

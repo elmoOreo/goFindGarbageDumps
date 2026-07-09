@@ -105,8 +105,8 @@
 
         createApp({
             setup() {
-                // Point this to your backend runtime endpoints (e.g., http://<CLOUD_RUN_URL>/api/reports in production)
-                const apiBaseUrl = "http://localhost:8080/api/reports"; 
+                // Unified base production configuration instance scope mapping
+                const apiBaseUrl = "/api/reports"; 
 
                 const reports = ref([]);
                 const currentIndex = ref(0);
