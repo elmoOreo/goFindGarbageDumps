@@ -1,3 +1,8 @@
+Here is a complete, production-ready `README.md` for your **BinItRadar** workspace. It concisely documents your architectural vision, data constraints, security mechanics, and step-by-step infrastructure launch sequence so that any developer can clone and run it seamlessly.
+
+### `README.md`
+
+```markdown
 # 📡 BinItRadar
 
 BinItRadar is a decentralized, privacy-centric civic computing engine designed to crowdsource, categorize, and map unregulated urban garbage accumulation and public health hazards in real time. 
@@ -10,6 +15,9 @@ By combining a low-friction Telegram Ingress Bot with an automated Edge AI compu
 
 The platform is designed around an event-driven, decoupled pipeline that maximizes performance while minimizing data leakage and API costs.
 
+
+```
+
 [Telegram Client] ──(1. Photo)──> [Go Ingress Engine] ──(2. Batch Labels)──> [GCP Vision API]
 │                                 │
 │ (4. GPS Button Prompt)          ▼ (3. Write Sandbox Session)
@@ -19,6 +27,7 @@ The platform is designed around an event-driven, decoupled pipeline that maximiz
 ▼
 [Private GCS Bucket] ──(7. Local V4 Sign)──> [Vue.js Analytics]
 
+```
 
 1. **Ingress Layer (Telegram Bot):** Intercepts visual uploads, enforces automated anti-mischief rules, and buffers temporary sessions.
 2. **Classification Layer (Google Cloud Vision API):** Runs a single-pass execution loop to extract primary infrastructure layouts (*regulated* vs. *unregulated*) along with specific hazard sub-types (*Plastics*, *Medical*, *Construction*, *Sanitary*).
@@ -30,6 +39,7 @@ The platform is designed around an event-driven, decoupled pipeline that maximiz
 
 ## 📂 Project Directory Structure
 
+```text
 goFindGarbageDumps/
 ├── web/
 │   └── index.html           # Vue.js 3 + Leaflet Dashboard Frontend
@@ -40,13 +50,17 @@ goFindGarbageDumps/
 ├── main.go                  # Core Go Application (Webhook + Analytics API Engine)
 └── README.md                # System Documentation Manual
 
+```
+
 ---
 
 ## 🛠️ Infrastructure Configuration
-1. MongoDB Sandbox Partial TTL Index
-To configure the 5-minute automated cleanup sandbox for aborted or unverified reports, ensure your dumpSites collection has the following partial index topology deployed (this is automatically validated during initMongoDB() engine execution):
 
-JavaScript
+### 1. MongoDB Sandbox Partial TTL Index
+
+To configure the 5-minute automated cleanup sandbox for aborted or unverified reports, ensure your `dumpSites` collection has the following partial index topology deployed (this is automatically validated during `initMongoDB()` engine execution):
+
+```javascript
 db.dumpSites.createIndex(
    { "recordedOn": 1 },
    { 
@@ -54,12 +68,16 @@ db.dumpSites.createIndex(
      partialFilterExpression: { "city": "Unverified" }
    }
 )
-2. Private Google Cloud Storage Configurations
-Keep your target bucket strictly closed to public tracking (allUsers blocked). Ensure that Cross-Origin Resource Sharing (CORS) is enabled so your local or static bucket dashboard can safely download pre-signed binary chunks.
 
-Create a gcs-cors.json file:
+```
 
-JSON
+### 2. Private Google Cloud Storage Configurations
+
+Keep your target bucket strictly closed to public tracking (`allUsers` blocked). Ensure that Cross-Origin Resource Sharing (CORS) is enabled so your local or static bucket dashboard can safely download pre-signed binary chunks.
+
+Create a `gcs-cors.json` file:
+
+```json
 [
   {
     "origin": ["*"],
@@ -68,14 +86,23 @@ JSON
     "maxAgeSeconds": 3600
   }
 ]
+
+```
+
 Push the ruleset to your production footprint:
 
-Bash
+```bash
 gcloud storage buckets update gs://YOUR_PRODUCTION_BUCKET_NAME --cors-file=gcs-cors.json
-🚀 Local Runtime Ingress Deployment
+
+```
+
+---
+
+## 🚀 Local Runtime Ingress Deployment
+
 Export your environmental variables inside your deployment terminal session:
 
-Bash
+```bash
 # Google Cloud Platform Authentication Hook
 export GOOGLE_APPLICATION_CREDENTIALS="binitbot-key.json"
 
@@ -85,36 +112,48 @@ export MONGODB_URI="mongodb+srv://<user>:<password>@cluster.mongodb.net/?retryWr
 export TELEGRAM_APITOKEN="1234567890:ABCdefGhIJKlmNoPQRsTUVwxyZ"
 export GEOAPIFY_KEY="your-geoapify-api-token-key"
 export PORT="8080"
+
+```
+
 Compile and boot up your Go backend infrastructure:
 
-Bash
+```bash
 # Fetch required modules
 go mod tidy
 
 # Execute runtime loop
 go run main.go
-The Go engine will spin up, verify connection pools to your MongoDB Atlas cluster, validate index bounds, and begin serving endpoints on :8080:
 
-POST /webhook - Entry gateway hook for incoming Telegram actions.
+```
 
-GET /api/reports - Secure analytics reporting filter loop providing dynamically signed V4 asset tokens.
+The Go engine will spin up, verify connection pools to your MongoDB Atlas cluster, validate index bounds, and begin serving endpoints on `:8080`:
+
+* `POST /webhook` - Entry gateway hook for incoming Telegram actions.
+* `GET /api/reports` - Secure analytics reporting filter loop providing dynamically signed V4 asset tokens.
+
+---
 
 ## 📱 User Interaction Manifesto
-/start Command (Onboarding)
+
+### `/start` Command (Onboarding)
+
 Fires automatically when a user joins the channel. Explains the operational vision ("Why we exist") and sets crisp expectations on how the report pipeline operates.
 
-/help Command (Data Standards Guidelines)
+### `/help` Command (Data Standards Guidelines)
+
 Delivers a highly compressed, viewport-optimized layout calibrated to fit an iPhone 12 screen frame without scrolling.
 
-Expected Inputs: Clear photos of municipal waste layers and rapid location sharing within a 5-minute window.
+* **Expected Inputs:** Clear photos of municipal waste layers and rapid location sharing within a 5-minute window.
+* **Prohibited Inputs:** Plain text conversation, chatter, queries, or non-garbage image assets.
 
-Prohibited Inputs: Plain text conversation, chatter, queries, or non-garbage image assets.
+### 🛡️ Automated Enforcement & Blocklist Firewall
 
-## 🛡️ Automated Enforcement & Blocklist Firewall
 If a user attempts to chat using plain text or uploads non-conforming images (falsified telemetry files with zero garbage features matched by the Google Vision label array), the engine short-circuits:
 
-It registers the user's chatId signature permanently into the blockedUsers collection.
+1. It registers the user's `chatId` signature permanently into the `blockedUsers` collection.
+2. It completely deletes the non-conforming file from Google Cloud Storage staging folders immediately.
+3. It drops all future processing requests from that user, returning a static warning message: *Contact administrator to unblock.*
 
-It completely deletes the non-conforming file from Google Cloud Storage staging folders immediately.
+```
 
-It drops all future processing requests from that user, returning a static warning message: Contact administrator to unblock.
+```
