@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BinItRadar Analytics Dashboard</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+
+    <div id="app" class="p-6 max-w-7xl mx-auto space-y-6">
+        <header class="border-b border-gray-800 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-emerald-400">📡 BinItRadar Analytics</h1>
+                <p class="text-sm text-gray-400">Decentralized Civic Waste Management Operational Console</p>
+            </div>
+            <div class="text-xs bg-gray-800 px-3 py-1.5 rounded text-gray-400 font-mono">
+                Records Loaded: {{ reports.length }}
+            </div>
+        </header>
+
+        <section class="bg-gray-800 p-4 rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">State *</label>
+                <input v-model="filters.state" type="text" placeholder="e.g. Tamil Nadu" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">City *</label>
+                <input v-model="filters.city" type="text" placeholder="e.g. Chennai" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Suburb</label>
+                <input v-model="filters.suburb" type="text" placeholder="All or specific value" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Street</label>
+                <input v-model="filters.street" type="text" placeholder="All or specific value" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Infrastructure Category</label>
+                <select v-model="filters.dumpType" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-emerald-500 text-white">
+                    <option value="All">All Categories</option>
+                    <option value="unregulated">⚠️ Unregulated Litter</option>
+                    <option value="regulated">✅ Regulated Dump Site</option>
+                </select>
+            </div>
+        </section>
+        
+        <div class="flex justify-end">
+            <button @click="fetchData" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-6 py-2 rounded shadow transition">Execute Pipeline Query</button>
+        </div>
+
+        <div v-if="reports.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <article class="bg-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50">
+                    <span :class="currentReport.dumpType === 'unregulated' ? 'bg-red-900/50 text-red-400 border border-red-800' : 'bg-emerald-900/50 text-emerald-400 border border-emerald-800'" class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+                        {{ currentReport.dumpType }}
+                    </span>
+                    <span class="text-xs text-gray-400 font-mono">Index: {{ currentIndex + 1 }} / {{ reports.length }}</span>
+                </div>
+
+                <div class="relative bg-black h-80 flex items-center justify-center overflow-hidden">
+                    <img :src="currentReport.objectName" class="object-contain max-h-full max-w-full">
+                </div>
+
+                <div class="p-4 space-y-3 bg-gray-800">
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div><span class="text-gray-400 text-xs block">Reporter Signature:</span> <span class="font-mono">@{{ currentReport.reporter || 'Anonymous' }}</span></div>
+                        <div><span class="text-gray-400 text-xs block">Vision Model Match:</span> <span>{{ (currentReport.classificationConf * 100).toFixed(1) }}%</span></div>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 text-xs block mb-1">Extracted Waste Profile Targets:</span>
+                        <div class="flex flex-wrap gap-1">
+                            <span v-for="tag in currentReport.garbageSubTypes" :key="tag" class="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                📦 {{ tag }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-gray-700 flex justify-between bg-gray-800/30">
+                    <button @click="navigate(-1)" class="bg-gray-700 hover:bg-gray-600 text-sm px-4 py-2 rounded transition font-medium">◀ Previous Frame</button>
+                    <button @click="navigate(1)" class="bg-gray-700 hover:bg-gray-600 text-sm px-4 py-2 rounded transition font-medium">Next Frame ▶</button>
+                </div>
+            </article>
+
+            <article class="bg-gray-800 rounded-xl overflow-hidden shadow-lg h-[500px] relative">
+                <div id="map" class="w-full h-full"></div>
+            </article>
+
+        </div>
+
+        <div v-else class="bg-gray-800/30 border border-gray-800 rounded-xl p-12 text-center text-gray-500 text-sm">
+            📭 No operational entries matched or loaded. Input mandatory State & City parameters to initialize telemetry mapping.
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                // Point this to your backend runtime endpoints (e.g., http://<CLOUD_RUN_URL>/api/reports in production)
+                const apiBaseUrl = "http://localhost:8080/api/reports"; 
+
+                const reports = ref([]);
+                const currentIndex = ref(0);
+                const filters = ref({
+                    state: "Tamil Nadu",
+                    city: "Chennai",
+                    suburb: "All",
+                    street: "All",
+                    dumpType: "All"
+                });
+
+                let mapInstance = null;
+                let activeMarkers = [];
+
+                const currentReport = computed(() => {
+                    return reports.value[currentIndex.value] || null;
+                });
+
+                const fetchData = async () => {
+                    try {
+                        const params = new URLSearchParams({
+                            state: filters.value.state,
+                            city: filters.value.city,
+                            suburb: filters.value.suburb,
+                            street: filters.value.street,
+                            dumpType: filters.value.dumpType
+                        });
+                        
+                        const response = await fetch(`${apiBaseUrl}?${params}`);
+                        if (!response.ok) throw new Error("Network pipeline fault fetching indices");
+                        
+                        const data = await response.json();
+                        reports.value = data;
+                        currentIndex.value = 0;
+
+                        await nextTick();
+                        initMapLayers();
+                    } catch (err) {
+                        console.error("Pipeline failure: ", err);
+                        alert("Failed loading assets matching search conditions.");
+                    }
+                };
+
+                const initMapLayers = () => {
+                    if (reports.value.length === 0) return;
+
+                    if (!mapInstance) {
+                        mapInstance = L.map('map').setView([13.0827, 80.2707], 11);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(mapInstance);
+                    }
+
+                    activeMarkers.forEach(m => mapInstance.removeLayer(m));
+                    activeMarkers = [];
+
+                    reports.value.forEach((report, index) => {
+                        const markerColor = report.dumpType === 'unregulated' ? '#EF4444' : '#10B981';
+                        
+                        const marker = L.circleMarker([report.latitude, report.longitude], {
+                            radius: 8,
+                            fillColor: markerColor,
+                            color: '#FFF',
+                            weight: 2,
+                            fillOpacity: 0.85
+                        }).addTo(mapInstance);
+
+                        const tooltipContent = `
+                            <div style="font-family: sans-serif; padding: 2px; color: #333;">
+                                <b>📍 Location:</b> ${report.street || 'Unknown'}, ${report.suburb || 'Unknown'}<br/>
+                                <b>📦 Profile:</b> ${report.garbageSubTypes ? report.garbageSubTypes.join(', ') : 'Mixed'}
+                            </div>
+                        `;
+                        marker.bindTooltip(tooltipContent, { permanent: false, direction: 'top' });
+
+                        marker.on('click', () => {
+                            currentIndex.value = index;
+                        });
+
+                        activeMarkers.push(marker);
+                    });
+
+                    syncMapFocus();
+                };
+
+                const syncMapFocus = () => {
+                    if (!currentReport.value || !mapInstance) return;
+                    const report = currentReport.value;
+                    mapInstance.setView([report.latitude, report.longitude], 14, { animate: true });
+                    
+                    activeMarkers.forEach((marker, index) => {
+                        if (index === currentIndex.value) {
+                            marker.setRadius(12);
+                            marker.setStyle({ weight: 4, color: '#FBBF24' });
+                        } else {
+                            const originalColor = reports.value[index].dumpType === 'unregulated' ? '#EF4444' : '#10B981';
+                            marker.setRadius(8);
+                            marker.setStyle({ weight: 2, color: '#FFF', fillColor: originalColor });
+                        }
+                    });
+                };
+
+                const navigate = (direction) => {
+                    const total = reports.value.length;
+                    if (total === 0) return;
+                    
+                    currentIndex.value = (currentIndex.value + direction + total) % total;
+                    syncMapFocus();
+                };
+
+                return {
+                    reports,
+                    currentIndex,
+                    filters,
+                    currentReport,
+                    fetchData,
+                    navigate
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
