@@ -30,7 +30,6 @@ The platform is designed around an event-driven, decoupled pipeline that maximiz
 
 ## 📂 Project Directory Structure
 
-```text
 goFindGarbageDumps/
 ├── web/
 │   └── index.html           # Vue.js 3 + Leaflet Dashboard Frontend
@@ -41,7 +40,9 @@ goFindGarbageDumps/
 ├── main.go                  # Core Go Application (Webhook + Analytics API Engine)
 └── README.md                # System Documentation Manual
 
-🛠️ Infrastructure Configuration
+---
+
+## 🛠️ Infrastructure Configuration
 1. MongoDB Sandbox Partial TTL Index
 To configure the 5-minute automated cleanup sandbox for aborted or unverified reports, ensure your dumpSites collection has the following partial index topology deployed (this is automatically validated during initMongoDB() engine execution):
 
@@ -98,7 +99,7 @@ POST /webhook - Entry gateway hook for incoming Telegram actions.
 
 GET /api/reports - Secure analytics reporting filter loop providing dynamically signed V4 asset tokens.
 
-📱 User Interaction Manifesto
+## 📱 User Interaction Manifesto
 /start Command (Onboarding)
 Fires automatically when a user joins the channel. Explains the operational vision ("Why we exist") and sets crisp expectations on how the report pipeline operates.
 
@@ -109,7 +110,7 @@ Expected Inputs: Clear photos of municipal waste layers and rapid location shari
 
 Prohibited Inputs: Plain text conversation, chatter, queries, or non-garbage image assets.
 
-🛡️ Automated Enforcement & Blocklist Firewall
+## 🛡️ Automated Enforcement & Blocklist Firewall
 If a user attempts to chat using plain text or uploads non-conforming images (falsified telemetry files with zero garbage features matched by the Google Vision label array), the engine short-circuits:
 
 It registers the user's chatId signature permanently into the blockedUsers collection.
