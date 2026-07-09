@@ -1,4 +1,3 @@
-```markdown
 # 📡 BinItRadar
 
 BinItRadar is a decentralized, privacy-centric civic computing engine designed to crowdsource, categorize, and map unregulated urban garbage accumulation and public health hazards in real time. 
@@ -149,7 +148,3 @@ If a user attempts to chat using plain text or uploads non-conforming images (fa
 1. It registers the user's `chatId` signature permanently into the `blockedUsers` collection.
 2. It completely deletes the non-conforming file from Google Cloud Storage staging folders immediately.
 3. It drops all future processing requests from that user, returning a static warning message: *Contact administrator to unblock.*
-
-```
-
-```
