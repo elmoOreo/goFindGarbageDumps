@@ -148,3 +148,31 @@ If a user attempts to chat using plain text or uploads non-conforming images (fa
 1. It registers the user's `chatId` signature permanently into the `blockedUsers` collection.
 2. It completely deletes the non-conforming file from Google Cloud Storage staging folders immediately.
 3. It drops all future processing requests from that user, returning a static warning message: *Contact administrator to unblock.*
+
+## 🛡️ Data Privacy & Transparency Protocol
+
+BinItRadar is engineered from the ground up around a strict **Data Minimization Protocol**. The architecture is entirely free of Personal Identifiable Information (PII)—it does not collect, track, or store real names, phone numbers, email addresses, or private device credentials.
+
+### 📋 Telemetry Schema Definition
+
+To map open public hazards transparently without exposing individual contributor identities, the platform stores only the following structured data attributes within the database cluster:
+
+| Attribute | Type | Description | PII Status |
+| :--- | :--- | :--- | :--- |
+| `_id` | ObjectId | Internal unique database cluster identifier | Clean ✅ |
+| `chatId` | Int64 | Truncated Telegram network session identification sequence | Clean ✅ |
+| `messageId` | Int32 | Message context identification tracking index | Clean ✅ |
+| `reporter` | String | Public alphanumeric Telegram user handle alias (e.g., `@datasigntist`) | Alias 👤 |
+| `dumpType` | String | AI vision-classified category (`regulated` \| `unregulated`) | Clean ✅ |
+| `classificationConf` | Double | Numerical model target verification precision scalar matching percentage | Clean ✅ |
+| `garbageSubTypes` | Array | Risk vectors identified (Plastic, Medical, Sanitary, Construction) | Clean ✅ |
+| `recordedOn` | Date | UTC timestamp entry generation marker | Clean ✅ |
+| `objectName` | String | Private internal Google Cloud Storage bucket path pointer | Clean ✅ |
+| `latitude` / `longitude`| Double | Geospatial coordinates mapped directly from the verified site location | Open Data 📍 |
+| `street` to `state` | String | Administrative boundary hierarchy layers extracted from reverse-geocoding | Public 🗺️ |
+
+### 🔒 Architectural Guardrails
+
+1. **Zero Public Storage Exposure:** The production Google Cloud Storage bucket acts as a completely closed vault (`allUsers` ingress and tracking blocked).
+2. **Cryptographic Token Demise:** Media assets rendered on the analytics dashboard are never linked via permanent static asset links. They are resolved via cryptographically signed V4 local URL tokens featuring a strict 15-minute expiration timeline.
+3. **Automated Ephemeral Pruning:** Staging files from unverified submissions or malicious entries are purged automatically within 5 minutes at the storage runtime layer using MongoDB Partial TTL indices to prevent downstream data logging.

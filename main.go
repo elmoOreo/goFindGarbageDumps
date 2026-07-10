@@ -528,6 +528,11 @@ func handleTelegramWebhook(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+		if command == "privacy" {
+			sendPrivacyStatement(chatID)
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 	}
 
 	if len(update.Message.Photo) > 0 {
@@ -724,6 +729,25 @@ func handleTelegramWebhook(w http.ResponseWriter, r *http.Request) {
 	fallbackNotice := tgbotapi.NewMessage(chatID, "💡 **Unsupported Interaction:** Text conversation is restricted. Only reporting features are supported. Send an image of a waste site or type /help to review the standards.")
 	bot.Send(fallbackNotice)
 	w.WriteHeader(http.StatusOK)
+}
+
+func sendPrivacyStatement(chatID int64) {
+	privacyText := `🛡️ *BinItRadar Privacy Statement*
+
+We enforce absolute data minimization. This platform *does not collect* phone numbers, physical identity profiles, or private personal telemetry.
+
+💾 *Exact Data Log Schema:*
+• *Network IDs:* Chat ID, Message ID (for session mapping)
+• *Reporter:* Your public Telegram alphanumeric username
+• *Telemetry:* Image Classification Type, Match Confidence %, and Waste Categories
+• *Geospatial:* Coordinates (Lat/Lon) translated to public administrative layers (Street, Suburb, City, State)
+• *Assets:* Secure image storage in an encrypted Google Cloud bucket served via temporary tokens.
+
+Your contribution maps public infrastructure health hazards without exposing your personal identity.`
+
+	msg := tgbotapi.NewMessage(chatID, privacyText)
+	msg.ParseMode = "Markdown"
+	bot.Send(msg)
 }
 
 func main() {
