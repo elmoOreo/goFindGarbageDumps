@@ -105,7 +105,7 @@
 
         createApp({
             setup() {
-                // Unified base production configuration instance scope mapping
+                // CORS-safe server relative routing path
                 const apiBaseUrl = "/api/reports"; 
 
                 const reports = ref([]);
@@ -182,8 +182,11 @@
                         `;
                         marker.bindTooltip(tooltipContent, { permanent: false, direction: 'top' });
 
+                        // ─── RIGHT-TO-LEFT INTERACTION ───
+                        // Clicking a map dot updates state, which shifts the left panel image
                         marker.on('click', () => {
                             currentIndex.value = index;
+                            syncMapFocus(); 
                         });
 
                         activeMarkers.push(marker);
@@ -195,16 +198,22 @@
                 const syncMapFocus = () => {
                     if (!currentReport.value || !mapInstance) return;
                     const report = currentReport.value;
+                    
+                    // Center view smoothly onto active item coordinates
                     mapInstance.setView([report.latitude, report.longitude], 14, { animate: true });
                     
+                    // ─── LEFT-TO-RIGHT INTERACTION VISUAL STATE ───
+                    // Highlight selected dot with larger bounds and glow color, reset others
                     activeMarkers.forEach((marker, index) => {
                         if (index === currentIndex.value) {
                             marker.setRadius(12);
-                            marker.setStyle({ weight: 4, color: '#FBBF24' });
+                            marker.setStyle({ weight: 4, color: '#FBBF24' }); // Gold highlighting halo ring
+                            marker.openTooltip(); // Dynamically force tooltip visibility for visual emphasis
                         } else {
                             const originalColor = reports.value[index].dumpType === 'unregulated' ? '#EF4444' : '#10B981';
                             marker.setRadius(8);
                             marker.setStyle({ weight: 2, color: '#FFF', fillColor: originalColor });
+                            marker.closeTooltip();
                         }
                     });
                 };
@@ -214,6 +223,8 @@
                     if (total === 0) return;
                     
                     currentIndex.value = (currentIndex.value + direction + total) % total;
+                    
+                    // Sync dot visuals right panel side concurrently upon carousel shift
                     syncMapFocus();
                 };
 
