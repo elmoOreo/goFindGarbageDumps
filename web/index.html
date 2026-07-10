@@ -13,6 +13,7 @@
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
 
     <div id="app" class="p-6 max-w-7xl mx-auto space-y-6">
+        <!-- Header Section -->
         <header class="border-b border-gray-800 pb-4 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight text-emerald-400">📡 BinItRadar Analytics</h1>
@@ -23,6 +24,27 @@
             </div>
         </header>
 
+        <!-- Vision & Mission Operational Banner (Enhanced Legibility Version) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-800/50 border border-gray-700 p-5 rounded-xl text-sm md:text-base tracking-wide shadow-inner">
+            <div class="flex items-start space-x-3">
+                <span class="text-emerald-400 font-extrabold font-mono uppercase text-xs bg-emerald-950/80 px-2.5 py-1 rounded border border-emerald-850 mt-0.5 tracking-wider shrink-0">
+                    VISION
+                </span>
+                <p class="text-gray-100 font-medium leading-relaxed">
+                    Eradicating illegal urban refuse centers through decentralized, real-time civic telemetry before they impact public health.
+                </p>
+            </div>
+            <div class="flex items-start space-x-3 border-t border-gray-800 md:border-t-0 md:border-l md:border-gray-700/60 md:pl-6 pt-3 md:pt-0">
+                <span class="text-blue-400 font-extrabold font-mono uppercase text-xs bg-blue-950/80 px-2.5 py-1 rounded border border-blue-850 mt-0.5 tracking-wider shrink-0">
+                    MISSION
+                </span>
+                <p class="text-gray-100 font-medium leading-relaxed">
+                    Arming citizens with automated computer vision verification vectors to map, prioritize, and neutralize community waste hazards.
+                </p>
+            </div>
+        </section>
+
+        <!-- Filters Section -->
         <section class="bg-gray-800 p-4 rounded-xl shadow-lg grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">State *</label>
@@ -54,8 +76,10 @@
             <button @click="fetchData" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-6 py-2 rounded shadow transition">Execute Pipeline Query</button>
         </div>
 
+        <!-- Analytics Displays -->
         <div v-if="reports.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
+            <!-- Left Panel: Image Slider -->
             <article class="bg-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between">
                 <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-800/50">
                     <span :class="currentReport.dumpType === 'unregulated' ? 'bg-red-900/50 text-red-400 border border-red-800' : 'bg-emerald-900/50 text-emerald-400 border border-emerald-800'" class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full">
@@ -89,6 +113,7 @@
                 </div>
             </article>
 
+            <!-- Right Panel: Interactive Map -->
             <article class="bg-gray-800 rounded-xl overflow-hidden shadow-lg h-[500px] relative">
                 <div id="map" class="w-full h-full"></div>
             </article>
@@ -105,7 +130,6 @@
 
         createApp({
             setup() {
-                // CORS-safe server relative routing path
                 const apiBaseUrl = "/api/reports"; 
 
                 const reports = ref([]);
@@ -182,8 +206,6 @@
                         `;
                         marker.bindTooltip(tooltipContent, { permanent: false, direction: 'top' });
 
-                        // ─── RIGHT-TO-LEFT INTERACTION ───
-                        // Clicking a map dot updates state, which shifts the left panel image
                         marker.on('click', () => {
                             currentIndex.value = index;
                             syncMapFocus(); 
@@ -199,16 +221,13 @@
                     if (!currentReport.value || !mapInstance) return;
                     const report = currentReport.value;
                     
-                    // Center view smoothly onto active item coordinates
                     mapInstance.setView([report.latitude, report.longitude], 14, { animate: true });
                     
-                    // ─── LEFT-TO-RIGHT INTERACTION VISUAL STATE ───
-                    // Highlight selected dot with larger bounds and glow color, reset others
                     activeMarkers.forEach((marker, index) => {
                         if (index === currentIndex.value) {
                             marker.setRadius(12);
-                            marker.setStyle({ weight: 4, color: '#FBBF24' }); // Gold highlighting halo ring
-                            marker.openTooltip(); // Dynamically force tooltip visibility for visual emphasis
+                            marker.setStyle({ weight: 4, color: '#FBBF24' }); 
+                            marker.openTooltip(); 
                         } else {
                             const originalColor = reports.value[index].dumpType === 'unregulated' ? '#EF4444' : '#10B981';
                             marker.setRadius(8);
@@ -223,8 +242,6 @@
                     if (total === 0) return;
                     
                     currentIndex.value = (currentIndex.value + direction + total) % total;
-                    
-                    // Sync dot visuals right panel side concurrently upon carousel shift
                     syncMapFocus();
                 };
 
